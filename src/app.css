@@ -1,1 +1,33 @@
 @import 'tailwindcss';
+
+/* ── WM7 Theme Tokens (dark default) ── */
+:root {
+  --wm-bg-primary:    #1e1e2e;
+  --wm-bg-secondary:  #313244;
+  --wm-bg-surface:    #45475a;
+  --wm-text-primary:  #cdd6f4;
+  --wm-text-secondary:#a6adc8;
+  --wm-border:        #585b70;
+  --wm-accent:        #89b4fa;
+  --wm-accent-hover:  #74c7ec;
+  --wm-header-bg:     #313244;
+  --wm-header-height: 28px;
+  --wm-radius:        6px;
+  --wm-snap-guide:    rgba(137,180,250,0.4);
+}
+
+/* ── Map tokens → Tailwind v4 utilities ── */
+@theme {
+  --color-wm-bg-primary:    var(--wm-bg-primary);
+  --color-wm-bg-secondary:  var(--wm-bg-secondary);
+  --color-wm-bg-surface:    var(--wm-bg-surface);
+  --color-wm-text-primary:  var(--wm-text-primary);
+  --color-wm-text-secondary:var(--wm-text-secondary);
+  --color-wm-border:        var(--wm-border);
+  --color-wm-accent:        var(--wm-accent);
+  --color-wm-accent-hover:  var(--wm-accent-hover);
+  --color-wm-header-bg:     var(--wm-header-bg);
+  --color-wm-snap-guide:    var(--wm-snap-guide);
+  --radius-wm:              var(--wm-radius);
+  --spacing-wm-header:      var(--wm-header-height);
+}

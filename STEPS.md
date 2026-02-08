@@ -53,11 +53,36 @@ bun install
 
 ---
 
-## Step 2: Theme tokens ⬜
+## Step 2: Theme tokens ✅
 
-Define CSS custom properties (`--wm-*`) in `app.css`, extend `tailwind.config.js` to map them.
+Define CSS custom properties (`--wm-*`) in `app.css`, extend Tailwind v4 `@theme` to map them.
 
-_Not started_
+### Files Modified
+| File | Change |
+|---|---|
+| `src/app.css` | Added `:root` block with all `--wm-*` custom properties (dark theme defaults) |
+| `src/app.css` | Added `@theme` block mapping tokens to Tailwind v4 utilities (`--color-wm-*`, `--radius-wm`, `--spacing-wm-header`) |
+
+### Tokens Defined
+| Token | Value | Tailwind Utility |
+|---|---|---|
+| `--wm-bg-primary` | `#1e1e2e` | `bg-wm-bg-primary` |
+| `--wm-bg-secondary` | `#313244` | `bg-wm-bg-secondary` |
+| `--wm-bg-surface` | `#45475a` | `bg-wm-bg-surface` |
+| `--wm-text-primary` | `#cdd6f4` | `text-wm-text-primary` |
+| `--wm-text-secondary` | `#a6adc8` | `text-wm-text-secondary` |
+| `--wm-border` | `#585b70` | `border-wm-border` |
+| `--wm-accent` | `#89b4fa` | `text-wm-accent`, `bg-wm-accent` |
+| `--wm-accent-hover` | `#74c7ec` | `hover:bg-wm-accent-hover` |
+| `--wm-header-bg` | `#313244` | `bg-wm-header-bg` |
+| `--wm-header-height` | `28px` | `h-wm-header` |
+| `--wm-radius` | `6px` | `rounded-wm` |
+| `--wm-snap-guide` | `rgba(137,180,250,0.4)` | `bg-wm-snap-guide` |
+
+### Status
+- [x] CSS custom properties defined under `:root`
+- [x] Tailwind v4 `@theme` mappings (no `tailwind.config.js` needed)
+- [x] Build passes
 
 ---
 
