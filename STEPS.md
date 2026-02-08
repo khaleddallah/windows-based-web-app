@@ -1,6 +1,6 @@
 # WM7 — Progress Tracker
 
-## Step 1: Scaffold SvelteKit + Tailwind + TypeScript ✅
+## Step 0: Scaffold SvelteKit + Tailwind + TypeScript ✅
 
 ### Commands Run
 ```bash
@@ -33,7 +33,7 @@ bun install
 
 ---
 
-## Step 2: Core types (WinConfig, PluginConfig, PluginLife) ✅
+## Step 1: Types ✅
 
 ### Files Created
 | File | Contents |
@@ -53,7 +53,17 @@ bun install
 
 ---
 
-## Step 3: Window.svelte (draggable, resizable, show/hide) ⬜
+## Step 2: Theme tokens ⬜
+
+Define CSS custom properties (`--wm-*`) in `app.css`, extend `tailwind.config.js` to map them.
+
+_Not started_
+
+---
+
+## Step 3: Window component ⬜
+
+Build `Window.svelte` with drag, resize, clamp, header, `visible` prop.
 
 _Not started_
 
@@ -61,71 +71,95 @@ _Not started_
 
 ## Step 4: WindowManager ⬜
 
-_Not started_
-
----
-
-## Step 5: PluginManager ⬜
+Z-index stacking (`windowOrder[]`), `bringToFront()`, `activeWindowId`, snapping (8px threshold, viewport + siblings).
 
 _Not started_
 
 ---
 
-## Step 6: Store (Svelte 5 runes) ⬜
+## Step 5: AppStore ⬜
+
+Implement the shared reactive store.
 
 _Not started_
 
 ---
 
-## Step 7: EventBus ⬜
+## Step 6: EventBus ⬜
+
+Implement pub/sub `EventBus` class with `on/emit/off`.
 
 _Not started_
 
 ---
 
-## Step 8: ServiceClient ⬜
+## Step 7: LayoutPersistence ⬜
+
+`save()`/`load()`/`clear()` with `localStorage`, debounced save on drag/resize-end.
 
 _Not started_
 
 ---
 
-## Step 9: ServiceServer (FastAPI) ⬜
+## Step 8: PluginManager ⬜
+
+Plugin registry, PluginLife lifecycle dispatch, inter-plugin API.
 
 _Not started_
 
 ---
 
-## Step 10: Theming (CSS custom properties) ⬜
+## Step 9: App Shell ⬜
+
+`+page.svelte` that reads config, boots PluginManager, provides EventBus via context, renders windows.
 
 _Not started_
 
 ---
 
-## Step 11: LayoutPersistence ⬜
+## Step 10: FilesServer ⬜
+
+FastAPI router with list/read/write endpoints + CORS middleware in `main.py`.
 
 _Not started_
 
 ---
 
-## Step 12: Test Plugin — Counter (with UI) ⬜
+## Step 11: FilesClient ⬜
+
+TypeScript client wrapping FilesServer API.
 
 _Not started_
 
 ---
 
-## Step 13: Test Plugin — Logger (no UI) ⬜
+## Step 12: Test Plugin A (explorer) ⬜
+
+UI plugin using Window — uses FilesClient.
 
 _Not started_
 
 ---
 
-## Step 14: Test Plugin — Notes (with UI) ⬜
+## Step 13: Test Plugin B (properties) ⬜
+
+UI plugin using Window — reads Store for selected item.
 
 _Not started_
 
 ---
 
-## Step 15: Integration test — all plugins running together ⬜
+## Step 14: Test Plugin C (logger) ⬜
+
+Headless plugin — subscribes to Store + EventBus, logs changes to console.
+
+_Not started_
+
+---
+
+## Step 15: Wiring & polish ⬜
+
+Connect everything, apply persistence, test edge cases.
 
 _Not started_
 
