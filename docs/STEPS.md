@@ -128,19 +128,33 @@ Define CSS custom properties (`--wm-*`) in `app.css`, extend Tailwind v4 `@theme
 
 ---
 
-## Step 5: AppStore ⬜
+## Step 5: AppStore ✅
 
-Implement the shared reactive store.
+**File:** `src/lib/core/AppStore.ts`
 
-_Not started_
+- Implements the shared reactive store contract (`AppStore` interface from `src/lib/types/store.ts`).
+- Uses Svelte's `writable` store under the hood.
+- Provides `get`, `set`, and `subscribe` methods for plugins to share state.
+- Keys are namespaced for plugin safety.
+
+**Status:**
+- [x] AppStore implemented in `src/lib/core/AppStore.ts`
+- [x] Interactive test added in `+page.svelte` to verify store functionality
 
 ---
 
-## Step 6: EventBus ⬜
+## Step 6: EventBus ✅
 
-Implement pub/sub `EventBus` class with `on/emit/off`.
+**File:** `src/lib/core/EventBus.ts`
 
-_Not started_
+- Implements the pub/sub event bus contract (`IEventBus` interface from `src/lib/types/events.ts`).
+- Provides `on`, `emit`, and `off` methods for transient, fire-and-forget events.
+- Handlers are registered per event name and can be unsubscribed.
+- Tested in `+page.svelte` with interactive event emission and subscription.
+
+**Status:**
+- [x] EventBus implemented in `src/lib/core/EventBus.ts`
+- [x] Interactive test added in `+page.svelte` to verify event bus functionality
 
 ---
 

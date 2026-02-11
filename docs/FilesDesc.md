@@ -96,6 +96,12 @@ Framework engine classes that live under `src/lib/core/`.
 ### `WindowsStore.ts`
 Svelte store and helpers for window management. Tracks all open windows, their order (z-index), active window, and provides API for registration, unregistration, bringing to front, updating config, and querying window state. Used by `Window.svelte` for all window lifecycle and stacking logic.
 
+### `AppStore.ts`
+Implements the shared reactive store contract (`AppStore` interface). Provides `get`, `set`, and `subscribe` methods for plugins to share state. Uses Svelte's `writable` store internally. Keys are namespaced for plugin safety. Tested in `+page.svelte`.
+
+### `EventBus.ts`
+Implements the pub/sub event bus contract (`IEventBus` interface). Provides `on`, `emit`, and `off` methods for transient, fire-and-forget events. Handlers are registered per event name and can be unsubscribed. Tested in `+page.svelte`.
+
 ### `ThemeSwitcher.ts`
 Manages dark/light theme switching via a `data-theme` attribute on `<html>`. Exports four functions:
 - **`setTheme(theme)`** — applies a theme and saves the choice to `localStorage`.
