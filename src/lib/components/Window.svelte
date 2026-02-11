@@ -7,6 +7,7 @@
   export let config: WinConfig;
   export let visible: boolean = true;
   export let windowId: string;
+  export let zIndex: number = 1;
 
   let windowEl: HTMLElement;
   let isDragging = false;
