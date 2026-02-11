@@ -32,7 +32,7 @@ The app boots through these files, in this order.
 The single HTML shell. SvelteKit injects everything into the `%sveltekit.head%` and `%sveltekit.body%` placeholders. You almost never edit this.
 
 ### `src/app.css`
-Global stylesheet. Imports Tailwind and defines the theming system:
+ Global stylesheet. Imports Tailwind and defines the theming system:
 - **`:root`** — all `--wm-*` CSS custom properties with dark theme defaults (Catppuccin Mocha).
 - **`[data-theme="light"]`** — overrides the same variables with light values (Catppuccin Latte).
 - **`@theme`** — maps the CSS variables to Tailwind v4 utilities so you can write `bg-wm-bg-primary`, `text-wm-accent`, `rounded-wm`, etc.
