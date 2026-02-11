@@ -342,7 +342,7 @@
 <style>
   .window {
     position: absolute;
-    background: #1a1a1a;
+    background: #00000000;
     border: 1px solid #333;
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
