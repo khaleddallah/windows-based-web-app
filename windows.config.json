@@ -5,7 +5,8 @@
     "boundsLimits": { "minW": 200, "minH": 150 },
     "hasHeader": true,
     "movable": true,
-    "resizable": true
+    "resizable": true,
+    "visible": true
   },
   {
     "title": "My Window2",
@@ -13,6 +14,7 @@
     "boundsLimits": { "minW": 200, "minH": 150 },
     "hasHeader": true,
     "movable": true,
-    "resizable": true
+    "resizable": true,
+    "visible": true
   }
 ]
