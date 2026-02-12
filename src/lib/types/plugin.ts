@@ -9,6 +9,7 @@ export interface WinConfig {
   hasHeader: boolean;
   movable: boolean;
   resizable: boolean;
+  visible?: boolean;
 }
 
 // ── Plugin API (methods a plugin exposes to other plugins) ──
@@ -32,8 +33,8 @@ export interface PluginConfig {
 // ── Plugin lifecycle (optional base class) ──
 
 export class PluginLife {
-  onInit(): void | Promise<void> {}
-  onActivate(): void | Promise<void> {}
-  onDeactivate(): void | Promise<void> {}
-  onDestroy(): void | Promise<void> {}
+  onInit(): void | Promise<void> { }
+  onActivate(): void | Promise<void> { }
+  onDeactivate(): void | Promise<void> { }
+  onDestroy(): void | Promise<void> { }
 }
