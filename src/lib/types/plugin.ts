@@ -1,16 +1,4 @@
-import type { Bounds, BoundsLimits } from './bounds.js';
-
-// ── Window configuration (shared by Window.svelte and PluginConfig) ──
-
-export interface WinConfig {
-  title: string;
-  bounds: Bounds;
-  boundsLimits?: BoundsLimits;
-  hasHeader: boolean;
-  movable: boolean;
-  resizable: boolean;
-  visible?: boolean;
-}
+import type { WinConfig } from './winConfig.js';
 
 // ── Plugin API (methods a plugin exposes to other plugins) ──
 

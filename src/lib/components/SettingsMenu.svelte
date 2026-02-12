@@ -6,7 +6,7 @@
         AppWindow,
         Check,
     } from "lucide-svelte";
-    import { type WinConfig } from "$lib/types/plugin";
+    import { type WinConfig } from "$lib/types/winConfig";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import {
         setTheme,
@@ -32,7 +32,7 @@
     }
 
     const exportLayout = () => {
-        const configs = Object.values($WindowsStore.winConfigs);
+        const configs = $WindowsStore.winConfigs;
         const json = JSON.stringify(configs, null, 2);
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -68,17 +68,15 @@
                 // Update store
                 WindowsStore.update(store => {
                     const newIds: string[] = [];
-                    const newConfigs: Record<string, WinConfig> = {};
-
-                    configs.forEach((config, index) => {
-                        const id = `imported-win-${Date.now()}-${index}`;
-                        newConfigs[id] = config;
+                    const newConfigs: WinConfig[] = configs.map((config, index) => {
+                        const id = config.id || `imported-win-${Date.now()}-${index}`;
                         newIds.push(id);
+                        return { ...config, id };
                     });
 
                     return {
                         ...store,
-                        winConfigs: newConfigs, // Replace entirely? Or merge? "Layout" usually implies replace.
+                        winConfigs: newConfigs,
                         windowOrder: newIds,
                         activeWindowId: newIds.length > 0 ? newIds[newIds.length - 1] : null
                     };
@@ -162,18 +160,18 @@
                 <span>Window</span>
             </DropdownMenu.SubTrigger>
             <DropdownMenu.SubContent>
-                {#each Object.entries($WindowsStore.winConfigs) as [id, config]}
+                {#each $WindowsStore.winConfigs as config}
                     <DropdownMenu.CheckboxItem
                         checked={config.visible !== false}
                         onclick={(e) => {
                             e.preventDefault();
-                            toggleWindowVisibility(id, config.visible);
+                            toggleWindowVisibility(config.id, config.visible);
                         }}
                     >
                         {config.title}
                     </DropdownMenu.CheckboxItem>
                 {/each}
-                {#if Object.keys($WindowsStore.winConfigs).length === 0}
+                {#if $WindowsStore.winConfigs.length === 0}
                     <DropdownMenu.Item disabled
                         >No windows open</DropdownMenu.Item
                     >
