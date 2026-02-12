@@ -40,8 +40,12 @@ The single HTML shell. SvelteKit injects everything into the `%sveltekit.head%` 
 ### `src/routes/+layout.svelte`
 The root layout — wraps every page. Imports `app.css` so Tailwind is available everywhere, and sets the favicon.
 
+
 ### `src/routes/+page.svelte`
 The main (and only) page. This will become the **App Shell** — the surface that renders the WindowManager, all plugin windows, and the toolbar.
+
+### `src/routes/test.svelte`
+A dedicated test page for development. Contains interactive tests and demos for core utilities like `AppStore` and `EventBus`. Useful for verifying store reactivity and event bus behavior in isolation, without affecting the main app shell. Not included in production builds.
 
 ---
 
