@@ -6,6 +6,10 @@
     updateWindowConfig,
     registerWindow as registerWin,
     unregisterWindow as unregisterWin,
+    groupWindows,
+    ungroupWindow,
+    setActiveTab,
+    setDropTarget,
   } from "$lib/core/WindowsStore";
   import { type WinConfig } from "../types";
   import { get } from "svelte/store";
@@ -17,9 +21,10 @@
   const configId = config.id;
 
   // Keep config in sync with the store – any update via updateWindowConfig()
-  // will be reflected here automatically.
+  // will be reflected here automatically.  Skip during drag/resize so local
+  // position changes aren't overwritten by stale store values.
   $: storeConfig = $WindowsStore.winConfigs.find(w => w.id === configId);
-  $: if (storeConfig) config = storeConfig;
+  $: if (storeConfig && !isDragging && !isResizing) config = storeConfig;
 
   let windowEl: HTMLElement;
   let isDragging = false;
@@ -35,11 +40,27 @@
   let isAltPressed = false;
   const SNAP_THRESHOLD = 8;
 
+  // ── Tab group state ──
+
+  // Tab tear-off state
+  let isTearingTab = false;
+  let tearTabId: string | null = null;
+  let tearStartX = 0;
+  let tearStartY = 0;
+  const TEAR_THRESHOLD = 40;
+
   // Reactive values from store
   $: currentBounds = config.bounds;
   $: isActive = $WindowsStore.activeWindowId === configId;
   $: zIndex = $WindowsStore.windowOrder.indexOf(configId) + 1;
   $: isVisible = config.visible;
+
+  // Group reactivity
+  $: isGrouped = !!(config.groupId && config.groupId !== '');
+  $: isActiveTab = config.activeInGroup === true;
+  $: groupMembers = isGrouped
+    ? $WindowsStore.winConfigs.filter(w => w.groupId === config.groupId)
+    : [];
 
   onMount(() => {
     registerWindow();
@@ -127,6 +148,9 @@
     newY = Math.max(0, Math.min(newY, viewport.h - currentBounds.h));
 
     updateBounds({ x: newX, y: newY });
+
+    // ── Drop-target detection: highlight another window's header ──
+    setDropTarget(findDropTarget(newX, newY));
   }
 
   function onDragEnd() {
@@ -136,8 +160,89 @@
     window.removeEventListener("mousemove", onDragMove);
     window.removeEventListener("mouseup", onDragEnd);
 
-    // Update store with final bounds
+    // If overlapping another window's header → group
+    const target = $WindowsStore.dropTargetId;
+    setDropTarget(null);
+    if (target) {
+      groupWindows(target, configId);
+      return;
+    }
+
+    // Update store with final bounds (propagate to group siblings)
     updateWindowConfig(configId, { bounds: currentBounds });
+    if (isGrouped) {
+      for (const m of groupMembers) {
+        if (m.id !== configId) {
+          updateWindowConfig(m.id, { bounds: { ...currentBounds } });
+        }
+      }
+    }
+  }
+
+  /** Check if our header overlaps another window's header zone (top 32px). */
+  function findDropTarget(myX: number, myY: number): string | null {
+    const store = get(WindowsStore);
+    const headerH = 32;
+    for (const w of store.winConfigs) {
+      if (w.id === configId) continue;
+      if (w.visible === false) continue;
+      // Skip windows that are in the same group as us
+      if (isGrouped && w.groupId === config.groupId) continue;
+      // Check if our top-centre falls within the other window's header zone
+      const myCenterX = myX + currentBounds.w / 2;
+      const myCenterY = myY + headerH / 2;
+      if (
+        myCenterX >= w.bounds.x &&
+        myCenterX <= w.bounds.x + w.bounds.w &&
+        myCenterY >= w.bounds.y &&
+        myCenterY <= w.bounds.y + headerH
+      ) {
+        return w.id;
+      }
+    }
+    return null;
+  }
+
+  // ── Tab tear-off handlers ──
+  function onTabMouseDown(e: MouseEvent, tabId: string) {
+    // Don't start tear for the only remaining tab, or if it's this window itself and not grouped
+    if (!isGrouped) return;
+    e.stopPropagation();
+    e.preventDefault();
+    isTearingTab = true;
+    tearTabId = tabId;
+    tearStartX = e.clientX;
+    tearStartY = e.clientY;
+    window.addEventListener('mousemove', onTabTearMove);
+    window.addEventListener('mouseup', onTabTearEnd);
+  }
+
+  function onTabTearMove(e: MouseEvent) {
+    if (!isTearingTab || !tearTabId) return;
+    const dy = Math.abs(e.clientY - tearStartY);
+    const dx = Math.abs(e.clientX - tearStartX);
+    if (dy > TEAR_THRESHOLD || dx > TEAR_THRESHOLD) {
+      // Tear off!
+      const detachId = tearTabId;
+      cleanupTabTear();
+      ungroupWindow(detachId, { x: e.clientX - 100, y: e.clientY - 16 });
+      bringToFront(detachId);
+    }
+  }
+
+  function onTabTearEnd() {
+    // If we didn't exceed threshold, treat as a click → switch tab
+    if (isTearingTab && tearTabId && isGrouped) {
+      setActiveTab(config.groupId!, tearTabId);
+    }
+    cleanupTabTear();
+  }
+
+  function cleanupTabTear() {
+    isTearingTab = false;
+    tearTabId = null;
+    window.removeEventListener('mousemove', onTabTearMove);
+    window.removeEventListener('mouseup', onTabTearEnd);
   }
 
   // Resize handlers
@@ -250,6 +355,13 @@
     window.removeEventListener("mouseup", onResizeEnd);
 
     updateWindowConfig(configId, { bounds: currentBounds });
+    if (isGrouped) {
+      for (const m of groupMembers) {
+        if (m.id !== configId) {
+          updateWindowConfig(m.id, { bounds: { ...currentBounds } });
+        }
+      }
+    }
   }
 
   function updateBounds(
@@ -266,6 +378,11 @@
     const store = get(WindowsStore);
     return store.winConfigs
       .filter((w) => w.id !== configId)
+      .filter((w) => {
+        // Skip hidden group members from snap calculations
+        if (w.groupId && w.groupId !== '' && !w.activeInGroup) return false;
+        return true;
+      })
       .map((w) => w.bounds);
   }
 
@@ -599,7 +716,7 @@
   }
 </script>
 
-{#if isVisible !== false}
+{#if isVisible !== false && (!isGrouped || isActiveTab)}
   <div
     bind:this={windowEl}
     class="window"
@@ -618,9 +735,29 @@
     on:mousedown={onMouseDown}
   >
     {#if config.hasHeader}
-      <div class="window-header">
-        <span class="window-title">{config.title}</span>
-      </div>
+      {#if isGrouped}
+        <!-- Tab bar for grouped windows -->
+        <div class="window-header tab-header">
+          <button
+            type="button"
+            class="tab-drag-handle"
+            aria-label="Drag grouped window"
+            on:mousedown={(e) => { e.stopPropagation(); startDrag(e); }}
+          >≡</button>
+          {#each groupMembers as member (member.id)}
+            <button
+              type="button"
+              class="tab-button"
+              class:tab-active={member.activeInGroup}
+              on:mousedown={(e) => onTabMouseDown(e, member.id)}
+            >{member.title}</button>
+          {/each}
+        </div>
+      {:else}
+        <div class="window-header">
+          <span class="window-title">{config.title}</span>
+        </div>
+      {/if}
     {/if}
 
     <div class="window-content">
@@ -692,6 +829,21 @@
   {/each}
 {/if}
 
+<!-- Drop-target highlight: rendered by ALL windows, visible only on the target -->
+{#if $WindowsStore.winConfigs.find(w => w.id === configId)}
+  <div
+    class="drop-target-highlight"
+    class:visible={$WindowsStore.dropTargetId === configId}
+    style="
+      left: {currentBounds.x}px;
+      top: {currentBounds.y}px;
+      width: {currentBounds.w}px;
+      height: 32px;
+      z-index: 9998;
+    "
+  ></div>
+{/if}
+
 <style>
   .window {
     position: absolute;
@@ -720,6 +872,59 @@
     padding: 0 12px;
     cursor: default;
     user-select: none;
+  }
+
+  /* ── Tab bar header ── */
+  .tab-header {
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  .tab-drag-handle {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 16px;
+    cursor: grab;
+    padding: 0 6px;
+    line-height: 32px;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .tab-drag-handle:hover {
+    color: #ccc;
+  }
+
+  .tab-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .tab-button {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    color: #999;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 12px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    line-height: 22px;
+  }
+
+  .tab-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ccc;
+  }
+
+  .tab-button.tab-active {
+    background: rgba(74, 158, 255, 0.25);
+    border-color: rgba(74, 158, 255, 0.5);
+    color: #e0e0e0;
   }
 
   .window-title {
@@ -824,5 +1029,21 @@
     height: 1px;
     left: 0;
     right: 0;
+  }
+
+  /* ── Drop-target highlight ── */
+  .drop-target-highlight {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 8px 8px 0 0;
+    border: 2px solid rgba(74, 158, 255, 0.8);
+    background: rgba(74, 158, 255, 0.15);
+    box-shadow: 0 0 12px rgba(74, 158, 255, 0.4);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .drop-target-highlight.visible {
+    opacity: 1;
   }
 </style>

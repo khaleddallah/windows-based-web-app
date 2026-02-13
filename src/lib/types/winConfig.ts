@@ -11,4 +11,6 @@ export interface WinConfig {
   movable: boolean;
   resizable: boolean;
   visible?: boolean;
+  groupId?: string;        // "" or undefined → not grouped
+  activeInGroup?: boolean; // true for the tab currently shown in the group
 }
