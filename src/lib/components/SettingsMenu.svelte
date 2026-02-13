@@ -14,7 +14,7 @@
         THEMES,
         type Theme,
     } from "$lib/core/ThemeSwitcher";
-    import { WindowsStore, updateWindowConfig } from "$lib/core/WindowsStore";
+    import { WindowsStore, updateWindowConfig, importWindowConfigs } from "$lib/core/WindowsStore";
     import { onMount, getContext } from "svelte";
 
     let currentTheme: Theme = $state("light");
@@ -60,13 +60,8 @@
                     return;
                 }
                 
-                // Update each window config using updateWindowConfig
-                for (const config of configs) {
-                    if (config.id) {
-                        const { id, ...rest } = config;
-                        updateWindowConfig(id, rest);
-                    }
-                }
+                // Use the store helper to import correctly (updates storage + active windows)
+                importWindowConfigs(configs);
 
             } catch (err) {
                 console.error("Failed to parse layout file", err);

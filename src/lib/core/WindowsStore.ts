@@ -1,6 +1,35 @@
 import { writable, get, type Writable } from 'svelte/store';
 import { type WinConfig } from '../types';
 
+const STORAGE_KEY = 'winConfigs';
+
+function getStoredConfigs(): WinConfig[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const item = localStorage.getItem(STORAGE_KEY);
+    return item ? JSON.parse(item) : [];
+  } catch (e) {
+    console.error('Failed to load window configs', e);
+    return [];
+  }
+}
+
+function saveConfigs(configsToUpdate: WinConfig[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const stored = getStoredConfigs();
+    const storedMap = new Map(stored.map(c => [c.id, c]));
+    
+    configsToUpdate.forEach(c => {
+      storedMap.set(c.id, c);
+    });
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(storedMap.values())));
+  } catch (e) {
+    console.error('Failed to save window configs', e);
+  }
+}
+
 // Store state interface
 interface WindowsState {
   winConfigs: WinConfig[];
@@ -23,6 +52,15 @@ export const WindowsStore: Writable<WindowsState> = writable(initialState);
 // Exported functions
 
 export function registerWindow(windowId: string, config: WinConfig): void {
+  // Check storage for existing config
+  let finalConfig = config;
+  if (typeof window !== 'undefined') {
+    const stored = getStoredConfigs().find(c => c.id === windowId);
+    if (stored) {
+      finalConfig = { ...config, ...stored };
+    }
+  }
+
   WindowsStore.update(store => {
     if (store.winConfigs.find(w => w.id === windowId)) {
       console.warn(`Window ${windowId} already registered`);
@@ -31,7 +69,7 @@ export function registerWindow(windowId: string, config: WinConfig): void {
 
     return {
       ...store,
-      winConfigs: [...store.winConfigs, config],
+      winConfigs: [...store.winConfigs, finalConfig],
       windowOrder: [...store.windowOrder, windowId]
     };
   });
@@ -205,7 +243,38 @@ export function setActiveTab(groupId: string, tabId: string): void {
   }));
 }
 
-/** Return all windows that belong to a given group. */
 export function getGroupWindows(groupId: string): WinConfig[] {
   return get(WindowsStore).winConfigs.filter(w => w.groupId === groupId);
+}
+
+/** 
+ * Import a set of window configurations.
+ * Updates localStorage for all provided configs, and updates the store for any currently active windows.
+ */
+export function importWindowConfigs(configs: WinConfig[]): void {
+  // 1. Persist all imported configs to storage (handles inactive windows)
+  saveConfigs(configs);
+
+  // 2. Update currently active windows in the store
+  WindowsStore.update(store => {
+    const newConfigs = store.winConfigs.map(w => {
+      const imported = configs.find(c => c.id === w.id);
+      return imported ? { ...w, ...imported } : w;
+    });
+    
+    return {
+      ...store,
+      winConfigs: newConfigs
+    };
+  });
+}
+
+// ── Persistence Subscription ──
+
+if (typeof window !== 'undefined') {
+  WindowsStore.subscribe(state => {
+    if (state.winConfigs.length > 0) {
+      saveConfigs(state.winConfigs);
+    }
+  });
 }
